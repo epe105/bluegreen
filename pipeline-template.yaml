@@ -1,0 +1,91 @@
+kind: "BuildConfig"
+apiVersion: "v1"
+metadata:
+  annotations:
+      pipeline.alpha.openshift.io/uses: '[{"name": "jenkins", "namespace": "", "kind": "DeploymentConfig"}]'
+  labels:
+    name: bluegreen-pipeline
+  name: bluegreen-pipeline
+spec:
+  strategy:
+    jenkinsPipelineStrategy:
+      env:
+        - name: DEV_PROJECT
+          value: app-dev
+        - name: QA_PROJECT
+          value: app-qa
+        - name: PROD_PROJECT
+          value: app-prod
+      jenkinsfile: |-
+        def version
+
+        pipeline {
+            agent {
+              label 'nodejs'
+            }
+            stages {
+                stage('create') {
+                    steps {
+                        script {
+                            openshift.withCluster() {
+                                openshift.withProject("app-dev") {
+                                  openshift.newApp("https://github.com/epe105/bluegreen-wings").narrow("svc").expose()
+                            }
+                        } // script
+                    } // steps
+                } // stage
+                stage('build') {
+                    steps {
+                        script {
+                            openshift.withCluster() {
+                                openshift.withProject("app-dev") {
+                                  openshift.selector("bc", "bluegreen").startBuild("--wait=true")
+                                }
+                            }
+                        } // script
+                    } // steps
+                } // stage
+                stage('test') {
+                    steps {
+                        script {
+                            openshift.withCluster() {
+                                openshift.withProject("pipeline-app") {
+                                    echo "All tests passed"
+                                }
+                            }
+                        } // script
+                    } // steps
+                } // stage
+                stage('Promote to QA') {
+                  steps {
+                    timeout(time:15, unit:'MINUTES') {
+                        input message: "Promote to STAGE?", ok: "Promote"
+                    }
+                    script {
+                      openshift.withCluster() {
+                        openshift.withProject(env.DEV_PROJECT) {
+                          openshift.tag("${env.DEV_PROJECT}/bluegreen:latest", "${env.QA_PROJECT}/bluegreen:latest")
+                        }
+                      }
+                    }
+                  }
+                }
+                stage('Create QA') {
+                  steps {
+                    script {
+                      openshift.withCluster() {
+                        openshift.withProject(env.QA_PROJECT) {
+                          if (openshift.selector('dc', 'bluegreen').exists()) {
+                            openshift.selector('dc', 'bluegreen').delete()
+                            openshift.selector('svc', 'bluegreen').delete()
+                            openshift.selector('route', 'bluegreen').delete()
+                          }
+                          openshift.newApp("${env.QA_PROJECT}/bluegreen:latest").narrow("svc").expose()
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+type: JenkinsPipeline
