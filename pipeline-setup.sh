@@ -8,7 +8,7 @@ echo "##########################################################################
 #repository_path=https://github.com/epe105/bluegreen#ocp33-pipeline-me
 
 oc new-project app-dev --display-name="Application Development Environment"
-oc new-app --name=bluegreen https://github.com/epe105/bluegreen-wings
+oc new-app --name=bluegreen https://github.com/epe105/bluegreen
 oc expose service bluegreen
 oc new-app jenkins-ephemeral -n app-dev
 #oc create -f php-bluegreen-app-pipeline-bc-new.yml

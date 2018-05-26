@@ -24,17 +24,17 @@ spec:
               label 'nodejs'
             }
             stages {
-                stage('create') {
-                    steps {
-                        script {
-                            openshift.withCluster() {
-                                openshift.withProject("app-dev") {
-                                  openshift.newApp("https://github.com/epe105/bluegreen-wings").narrow("svc").expose()
-                            }
-                        } // script
-                    } // steps
-                } // stage
-                stage('build') {
+                //stage('create') {
+                    //steps {
+                        //script {
+                            //openshift.withCluster() {
+                                //openshift.withProject("app-dev") {
+                                  //openshift.newApp("https://github.com/epe105/bluegreen").narrow("svc").expose()
+                            //}
+                        //} // script
+                    //} // steps
+                //} // stage
+                stage('Build') {
                     steps {
                         script {
                             openshift.withCluster() {
@@ -45,7 +45,7 @@ spec:
                         } // script
                     } // steps
                 } // stage
-                stage('test') {
+                stage('Test') {
                     steps {
                         script {
                             openshift.withCluster() {
@@ -58,19 +58,19 @@ spec:
                 } // stage
                 stage('Promote to QA') {
                   steps {
-                    timeout(time:15, unit:'MINUTES') {
-                        input message: "Promote to STAGE?", ok: "Promote"
-                    }
+                    // timeout(time:15, unit:'MINUTES') {
+                        // input message: "Promote to QA?", ok: "Promote"
+                    // }
                     script {
                       openshift.withCluster() {
                         openshift.withProject(env.DEV_PROJECT) {
                           openshift.tag("${env.DEV_PROJECT}/bluegreen:latest", "${env.QA_PROJECT}/bluegreen:latest")
                         }
                       }
-                    }
-                  }
-                }
-                stage('Create QA') {
+                    } // script
+                  } //steps
+                } // stage
+                stage('Deploy to QA') {
                   steps {
                     script {
                       openshift.withCluster() {
@@ -83,9 +83,40 @@ spec:
                           openshift.newApp("${env.QA_PROJECT}/bluegreen:latest").narrow("svc").expose()
                         }
                       }
+                    } // script
+                  } // steps
+                } // stage
+                stage('Promote to PROD') {
+                  steps {
+                    timeout(time:15, unit:'MINUTES') {
+                        input message: "Promote to PROD?", ok: "Promote"
                     }
-                  }
-                }
+                    script {
+                      openshift.withCluster() {
+                        openshift.withProject(env.QA_PROJECT) {
+                          openshift.tag("${env.QA_PROJECT}/bluegreen:latest", "${env.PROD_PROJECT}/bluegreen:latest")
+                        }
+                      }
+                    } // script
+                  } //steps
+                } // stage
+                stage('Deploy to PROD') {
+                  steps {
+                    script {
+                      openshift.withCluster() {
+                        openshift.withProject(env.PROD_PROJECT) {
+                          if (openshift.selector('dc', 'bluegreen').exists()) {
+                            openshift.selector('dc', 'bluegreen').delete()
+                            openshift.selector('svc', 'bluegreen').delete()
+                            openshift.selector('route', 'bluegreen').delete()
+                          }
+                          openshift.newApp("${env.PROD_PROJECT}/bluegreen:latest").narrow("svc").expose()
+                        }
+                      }
+                    } // script
+                  } // steps
+                } // stage
+
               }
             }
 type: JenkinsPipeline
