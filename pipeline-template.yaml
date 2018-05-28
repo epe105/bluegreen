@@ -45,12 +45,12 @@ spec:
                         } // script
                     } // steps
                 } // stage
-                stage('Test') {
+                stage('DEV Tests') {
                     steps {
                         script {
                             openshift.withCluster() {
                                 openshift.withProject("pipeline-app") {
-                                    echo "All tests passed"
+                                    echo "All tests in DEV passed"
                                 }
                             }
                         } // script
@@ -85,6 +85,17 @@ spec:
                       }
                     } // script
                   } // steps
+                } // stage
+                stage('QA Tests') {
+                    steps {
+                        script {
+                            openshift.withCluster() {
+                                openshift.withProject("pipeline-app") {
+                                    echo "All tests in QA passed"
+                                }
+                            }
+                        } // script
+                    } // steps
                 } // stage
                 stage('Promote to PROD') {
                   steps {

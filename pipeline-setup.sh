@@ -24,15 +24,7 @@ oc policy add-role-to-user edit system:serviceaccount:app-dev:jenkins -n app-pro
 oc policy add-role-to-group system:image-puller system:serviceaccounts:app-qa -n app-dev
 oc policy add-role-to-group system:image-puller system:serviceaccounts:app-prod -n app-qa
 
-# Create BlueGreen Green App
+# Create BlueGreen Green App in PROD
 oc project app-prod
 oc new-app https://github.com/epe105/bluegreen#green --name=bluegreen-green
 oc expose service bluegreen-green
-
-# Delete bluegreen app
-oc project app-dev
-oc delete service bluegreen
-oc delete deploymentconfigs bluegreen
-oc delete route bluegreen
-oc delete imagestreams bluegreen
-oc delete bc bluegreen -n app-dev
