@@ -122,6 +122,7 @@ spec:
                             openshift.selector('route', 'bluegreen').delete()
                           }
                           openshift.newApp("${env.PROD_PROJECT}/bluegreen:latest").narrow("svc").expose()
+                          //openshift.newApp("${env.PROD_PROJECT}/bluegreen:latest")
                         }
                       }
                     } // script
