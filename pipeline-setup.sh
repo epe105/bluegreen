@@ -31,5 +31,5 @@ oc policy add-role-to-group system:image-puller system:serviceaccounts:app-prod 
 
 # Create BlueGreen Green App in PROD
 oc project app-prod
-oc new-app https://github.com/epe105/bluegreen#green --name=bluegreen-v1
+oc new-app https://github.com/epe105/bluegreen#blue --name=bluegreen-original
 oc expose service bluegreen-prod-route
