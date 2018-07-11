@@ -2,7 +2,7 @@
 
 echo "###############################################################################"
 echo "#  MAKE SURE YOU ARE LOGGED IN:                                               #"
-echo "#  $ oc login https://192.168.42.136:8443                                     #"
+echo "#  $ oc login https://192.168.42.214:8443                                     #"
 echo "###############################################################################"
 
 #repository_path=https://github.com/epe105/bluegreen
@@ -14,8 +14,8 @@ oc create -f pipeline-template.yaml
 
 # App Dev Setup
 oc new-project app-dev --display-name="Application Development Environment"
-oc new-app --name=bluegreen https://github.com/epe105/bluegreen
-oc expose service bluegreen
+# oc new-app --name=bluegreen https://github.com/epe105/bluegreen
+# oc expose service bluegreen
 
 oc new-project app-qa --display-name="Application QA Environment"
 oc new-project app-prod --display-name="Application Production Environment"
@@ -31,5 +31,5 @@ oc policy add-role-to-group system:image-puller system:serviceaccounts:app-prod 
 
 # Create BlueGreen Green App in PROD
 oc project app-prod
-oc new-app https://github.com/epe105/bluegreen#green --name=bluegreen-prod
-oc expose service bluegreen-prod
+oc new-app https://github.com/epe105/bluegreen#green --name=bluegreen-v1
+oc expose service bluegreen-prod-route
